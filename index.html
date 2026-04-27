@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VIDACOR VENDEDOR PRO</title>
+    <meta name="referrer" content="no-referrer">
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22VIDACOR%20VENDEDOR%20PRO%22%2C%22short_name%22%3A%22Vidacor%20Pro%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%233E3B9F%22%2C%22theme_color%22%3A%22%233E3B9F%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%3Ccircle%20cx%3D'50'%20cy%3D'50'%20r%3D'45'%20fill%3D'%233E3B9F'%2F%3E%3Ctext%20x%3D'35'%20y%3D'65'%20font-size%3D'50'%3E%F0%9F%8F%97%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22100x100%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <meta name="theme-color" content="#3E3B9F">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        :root {
+            --vidacor-primary: #3E3B9F;
+            --vidacor-dark: #2a2870;
+            --vidacor-yellow: #FFFF00;
+            --vidacor-yellow-hover: #e6e600;
+            --bg-light: #f8f9fc;
+            --card-bg: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --shadow: 0 4px 12px rgba(0,0,0,0.04);
+            --radius: 18px;
+            --font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+            --chart-text: #333;
+            --chart-grid: rgba(0,0,0,0.1);
+        }
+        body.dark {
+            --bg-light: #1e1e2f;
+            --card-bg: #2a2a3d;
+            --text-primary: #eee;
+            --text-secondary: #aaa;
+            --shadow: 0 4px 12px rgba(0,0,0,0.2);
+            --chart-text: #eee;
+            --chart-grid: rgba(255,255,255,0.1);
+        }
+        body {
+            background: var(--bg-light);
+            padding-bottom: 90px;
+            font-family: var(--font-family);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+        .app-header {
+            background: linear-gradient(135deg, var(--vidacor-primary), var(--vidacor-dark));
+            color: var(--vidacor-yellow);
+            padding: 16px;
+            text-align: center;
+            position: sticky; top: 0; z-index: 900;
+        }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card-bg);
+            display: flex; justify-content: space-around; align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+            height: 70px; z-index: 1000;
+            border-radius: 24px 24px 0 0; padding: 0 8px;
+        }
+        .nav-item {
+            text-align: center; color: var(--text-secondary); flex: 1;
+            padding: 8px 0; font-size: 0.7rem;
+            cursor: pointer; border: none; background: none;
+        }
+        .nav-item.active { color: var(--vidacor-primary); font-weight: 600; }
+        .nav-item i { font-size: 1.6rem; display: block; margin-bottom: 2px; }
+        .fab-btn {
+            background: var(--vidacor-yellow); color: var(--vidacor-primary);
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            margin-top: -28px; border: 4px solid var(--card-bg); cursor: pointer;
+        }
+        .screen { display: none; padding: 20px 16px; animation: slideIn 0.25s ease; }
+        .screen.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .card-obra {
+            background: var(--card-bg); border-radius: var(--radius); padding: 16px;
+            margin-bottom: 12px; box-shadow: var(--shadow);
+            border-left: 5px solid var(--vidacor-primary); cursor: pointer;
+        }
+        .map-container { height: 55vh; border-radius: 18px; border: 1px solid #e0e0e0; position: relative; }
+        .map-controls {
+            position: absolute; top: 10px; right: 10px; z-index: 500;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .map-controls button {
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: var(--card-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;
+            color: var(--text-primary);
+        }
+        .map-filter-panel {
+            position: absolute; bottom: 10px; left: 10px; z-index: 500;
+            background: var(--card-bg); border-radius: 12px; padding: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .btn-vidacor { background: linear-gradient(135deg, var(--vidacor-primary), var(--vidacor-dark)); color: var(--vidacor-yellow); border: none; font-weight: 600; border-radius: 30px; }
+        .btn-vidacor:hover { background: linear-gradient(135deg, var(--vidacor-dark), var(--vidacor-primary)); color: white; }
+        .img-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; cursor: pointer; }
+        .toast-msg { background: var(--vidacor-primary); color: white; padding: 10px 20px; border-radius: 30px; margin-bottom: 8px; animation: slideDown 0.3s; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-card {
+            background: rgba(255,255,255,0.4); backdrop-filter: blur(16px);
+            border-radius: 24px; box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.3); padding: 16px; margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        .circular-progress { position: relative; width: 80px; height: 80px; }
+        .circular-progress svg { transform: rotate(-90deg); }
+        .circular-progress circle { fill: none; stroke-width: 8; stroke: #e0e0e0; stroke-linecap: round; }
+        .circular-progress .progress-circle { stroke: var(--vidacor-primary); stroke-dasharray: 251.2; stroke-dashoffset: 251.2; transition: stroke-dashoffset 0.5s; }
+        .circular-progress .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+        #splashScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--vidacor-primary); display: flex; align-items: center; justify-content: center; z-index: 10000; transition: opacity 0.5s; }
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .lightbox img { max-width: 90%; max-height: 90%; border-radius: 12px; }
+        .lightbox .close { position: absolute; top: 20px; right: 30px; font-size: 2rem; color: white; cursor: pointer; }
+        .map-filter-panel .form-check-label { color: var(--text-primary); }
+        .form-control, .form-select { background: var(--card-bg); color: var(--text-primary); border: 1px solid #ccc; }
+        .form-control:focus, .form-select:focus { background: var(--card-bg); color: var(--text-primary); }
+        .login-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:10000; }
+    </style>
+</head>
+<body class="light">
+
+<!-- Splash screen -->
+<div id="splashScreen">
+    <div style="text-align:center; color: var(--vidacor-yellow);">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--vidacor-yellow)" stroke-width="4" />
+            <text x="50" y="65" text-anchor="middle" fill="var(--vidacor-yellow)" font-size="40">🏗️</text>
+        </svg>
+        <h2 style="margin-top:15px;">VIDACOR VENDEDOR PRO</h2>
+    </div>
+</div>
+
+<!-- SEM ONBOARDING -->
+
+<div class="app-header" id="appHeader">
+    <span class="online-indicator" id="onlineIndicator" style="position:absolute;top:10px;right:15px;width:12px;height:12px;border-radius:50%;background:#00e676;"></span>
+    <div class="brand">🏗️ VIDACOR VENDEDOR PRO</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardScreen" class="screen active">
+    <div class="clima-box" id="climaBox" style="background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); border-radius:24px; padding:12px; margin-bottom:12px;">
+        <span id="climaIcon" style="font-size:2rem;">⛅</span>
+        <div><small id="climaTemp">--°C</small><br><small id="climaDesc">Carregando...</small></div>
+    </div>
+    <h5 class="fw-bold mb-3">📊 Resumo do Dia</h5>
+    <div class="row g-2 mb-3">
+        <div class="col-6"><div class="glass-card text-center"><strong id="countVisitas">0</strong><br><small>Visitas hoje</small></div></div>
+        <div class="col-6"><div class="glass-card text-center"><strong id="countPendentes">0</strong><br><small>Pendentes</small></div></div>
+        <div class="col-6"><div class="glass-card text-center"><strong id="countProspeccao">0</strong><br><small>Em prospecção</small></div></div>
+        <div class="col-6"><div class="glass-card text-center"><strong id="countFechadas">0</strong><br><small>Fechadas</small></div></div>
+    </div>
+    <div class="glass-card d-flex align-items-center justify-content-between">
+        <span>Meta diária</span>
+        <div class="circular-progress" id="circularProgress">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" />
+                <circle class="progress-circle" cx="50" cy="50" r="40" />
+            </svg>
+            <span class="progress-text" id="metaTextoCircular">0/0</span>
+        </div>
+    </div>
+    <div class="row mt-3 mb-3">
+        <div class="col-6"><div class="glass-card"><canvas id="chartSemanal" height="100"></canvas></div></div>
+        <div class="col-6"><div class="glass-card"><canvas id="chartFunil" height="100"></canvas></div></div>
+    </div>
+    <div class="glass-card mb-3"><canvas id="chartStatus" style="max-height:180px;"></canvas></div>
+    <button class="btn btn-vidacor w-100 mb-3" onclick="verObrasProximas()"><i class="bi bi-geo-alt"></i> Obras próximas</button>
+    <h6>🔔 Próximas visitas</h6>
+    <div id="proximasObrasList"></div>
+</div>
+
+<!-- LISTA DE OBRAS -->
+<div id="listaScreen" class="screen">
+    <h5 class="fw-bold mb-3">📋 Obras mapeadas</h5>
+    <div class="position-relative mb-2">
+        <input type="text" id="buscaObra" class="form-control pe-5 rounded-pill" placeholder="Buscar...">
+        <button class="mic-btn rounded-circle" id="micButton" onclick="toggleVoiceSearch()" style="position:absolute; right:5px; top:5px; background:none; border:none;"><i class="bi bi-mic"></i></button>
+    </div>
+    <div class="row g-2 mb-3">
+        <div class="col-6"><select id="filtroStatus" class="form-select form-select-sm rounded-pill"><option value="">Status</option><option value="pendente">Pendente</option><option value="visitada">Visitada</option><option value="fechada">Fechada</option></select></div>
+        <div class="col-6"><select id="filtroEstagio" class="form-select form-select-sm rounded-pill"><option value="">Estágio</option><option value="prospecção">Prospecção</option><option value="fundação">Fundação</option><option value="estrutura">Estrutura</option><option value="acabamento">Acabamento</option><option value="finalizada">Finalizada</option></select></div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <select id="ordenacaoLista" class="form-select form-select-sm w-auto rounded-pill">
+            <option value="recentes">Mais recentes</option><option value="antigas">Mais antigas</option><option value="nomeAZ">A-Z</option><option value="nomeZA">Z-A</option><option value="proxVis">Próx. visita breve</option><option value="proxVisDesc">Próx. visita longe</option>
+        </select>
+        <div class="form-check"><input class="form-check-input" type="checkbox" id="mostrarArquivadas"><label class="form-check-label small">Arquivadas</label></div>
+        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="roteirizarSelecionadas()">🗺️ Rota</button>
+    </div>
+    <div id="listaObrasContainer"></div>
+</div>
+
+<!-- CADASTRO DE OBRA -->
+<div id="cadastroScreen" class="screen">
+    <h5 class="fw-bold mb-3">🆕 Cadastrar Obra</h5>
+    <form id="formObra">
+        <input type="hidden" id="editId">
+        <div class="mb-2"><label>Nome</label><input type="text" id="nomeObra" class="form-control rounded-pill" required></div>
+
+        <div class="mb-2"><label>Coordenadas</label>
+            <div class="input-group">
+                <input type="text" id="coordsObra" class="form-control rounded-pill" placeholder="lat, lng">
+                <button type="button" id="gpsBtn" class="btn btn-outline-success rounded-pill" onclick="obterLocalizacao()"><i class="bi bi-geo-alt"></i></button>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label>Endereço (logradouro)</label>
+            <div class="input-group">
+                <input type="text" id="enderecoObra" class="form-control rounded-pill" placeholder="Rua, Avenida..." required>
+                <input type="text" id="numeroObra" class="form-control rounded-pill" placeholder="Nº" style="max-width:80px;">
+            </div>
+        </div>
+
+        <div class="row mb-2"><div class="col-6"><label>Contato</label><input type="text" id="contatoObra" class="form-control rounded-pill"></div><div class="col-6"><label>Telefone</label><input type="text" id="telefoneObra" class="form-control rounded-pill"></div></div>
+        <div class="mb-2"><label>Observações</label><textarea id="observacoesObra" class="form-control rounded-3" rows="2"></textarea></div>
+        <div class="mb-2"><label>Estágio</label><select id="estagioObra" class="form-select rounded-pill"><option value="prospecção">Prospecção</option><option value="fundação">Fundação</option><option value="estrutura">Estrutura</option><option value="acabamento">Acabamento</option><option value="finalizada">Finalizada</option></select></div>
+        <div class="mb-2"><label>Status</label><select id="statusObra" class="form-select rounded-pill"><option value="pendente">Pendente</option><option value="visitada">Visitada</option><option value="fechada">Fechada</option></select></div>
+        <div class="mb-2 form-check"><input class="form-check-input" type="checkbox" id="clientePotencial"><label class="form-check-label">⭐ Cliente potencial</label></div>
+        <div class="mb-2"><label>Data próxima visita</label><input type="date" id="dataVisitaObra" class="form-control rounded-pill"></div>
+        <div class="mb-2"><label>Fotos (até 3)</label><input type="file" id="fotoObra" class="form-control rounded-pill" accept="image/*" capture="environment" onchange="previewFotos(this)" multiple><div id="fotosPreview" class="d-flex flex-wrap mt-2"></div><input type="hidden" id="fotosBase64"></div>
+        <button type="submit" class="btn btn-vidacor w-100 mt-2 rounded-pill">💾 Salvar</button>
+        <button type="button" class="btn btn-outline-secondary w-100 mt-2 rounded-pill" onclick="cancelarCadastro()">Cancelar</button>
+    </form>
+</div>
+
+<!-- DETALHES -->
+<div id="detalheScreen" class="screen">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill mb-2" onclick="navegarPara('listaScreen')"><i class="bi bi-arrow-left"></i> Voltar</button>
+    <div id="detalheConteudo"></div>
+</div>
+
+<!-- MAPA -->
+<div id="mapaScreen" class="screen">
+    <h5 class="fw-bold mb-2">🗺️ Mapa de Obras</h5>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <input type="text" id="buscaMapa" class="form-control rounded-pill me-2" placeholder="Buscar endereço">
+        <button class="btn btn-outline-primary rounded-pill" onclick="buscarNoMapa()"><i class="bi bi-search"></i></button>
+    </div>
+    <div class="map-container" id="mapContainer">
+        <div id="map" style="width:100%; height:100%; border-radius:18px;"></div>
+        <div class="map-controls">
+            <button title="Centralizar" onclick="centralizarUsuario()"><i class="bi bi-crosshair"></i></button>
+            <button id="layerToggle" title="Satélite" onclick="alternarCamada()"><i class="bi bi-map"></i></button>
+            <button title="Street View" onclick="abrirStreetView()"><i class="bi bi-person-walking"></i></button>
+            <button title="Rota" onclick="roteirizarDoMapa()"><i class="bi bi-signpost-2"></i></button>
+        </div>
+        <div class="map-filter-panel" id="mapFilterPanel">
+            <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="mapFiltroPendente" checked onchange="filtrarMarcadores()"><label class="form-check-label">Pendente</label></div>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="mapFiltroVisitada" checked onchange="filtrarMarcadores()"><label class="form-check-label">Visitada</label></div>
+            <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="mapFiltroFechada" checked onchange="filtrarMarcadores()"><label class="form-check-label">Fechada</label></div>
+        </div>
+    </div>
+    <small>Toque nos pinos para detalhes</small>
+</div>
+
+<!-- FERRAMENTAS -->
+<div id="ferramentasScreen" class="screen">
+    <h5 class="fw-bold mb-3">🧰 Ferramentas</h5>
+    <div class="glass-card" style="background: var(--vidacor-primary); color:white;">
+        <h2 style="color:var(--vidacor-yellow)">🧮 Calculadora WallCril</h2>
+        <p>Estime textura e selador</p>
+        <label>Textura:</label><select id="textura-tipo" class="rounded-pill form-select mb-2"><option value="2.2">Design (2,2)</option><option value="3.5">Grafiato (3,5)</option><option value="3.5">Lamacril (3,5)</option><option value="2.2">Cim.Queimado (2,2)</option><option value="5.0">Elegance (5,0)</option><option value="2.2">Lisa (2,2)</option></select>
+        <label>Área (m²):</label><input type="number" id="area-wall" class="rounded-pill form-control mb-2" placeholder="Ex: 50">
+        <button id="calcular-btn" class="btn btn-warning w-100 rounded-pill">Calcular</button>
+        <div id="resultado-wallcril" class="mt-3"></div>
+    </div>
+
+    <div class="glass-card mt-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <span>🌓 Modo escuro</span>
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="darkSwitch" onchange="toggleDarkMode()">
+                <label class="form-check-label" for="darkSwitch" id="darkLabel">Claro</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card mt-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <span>📍 Compartilhar localização</span>
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" id="locSwitch" onchange="toggleCompartilharLoc()">
+                <label class="form-check-label" for="locSwitch">Desativado</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card mt-3">
+        <button class="btn btn-outline-secondary w-100 rounded-pill" onclick="trocarVendedor()">🔄 Trocar vendedor</button>
+    </div>
+</div>
+
+<!-- Menu inferior -->
+<div class="bottom-nav">
+    <button class="nav-item active" data-screen="dashboardScreen" data-label="Início"><i class="bi bi-speedometer2"></i><span>Início</span></button>
+    <button class="nav-item" data-screen="listaScreen" data-label="Obras"><i class="bi bi-list-ul"></i><span>Obras</span></button>
+    <div class="fab-btn" onclick="navegarPara('cadastroScreen')"><i class="bi bi-plus-lg"></i></div>
+    <button class="nav-item" data-screen="mapaScreen" data-label="Mapa"><i class="bi bi-geo-alt"></i><span>Mapa</span></button>
+    <button class="nav-item" data-screen="ferramentasScreen" data-label="Ferramentas"><i class="bi bi-tools"></i><span>Ferram.</span></button>
+</div>
+
+<div class="toast-container" id="toastContainer" style="position:fixed;top:15px;right:15px;z-index:9999;"></div>
+
+<!-- Firebase SDKs (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+<script>
+  // Configuração do Firebase (SUAS CREDENCIAIS ATUALIZADAS)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCTxuAncGHfdMjLs6bo8Wk3pT2sVpuNtjg",
+    authDomain: "vidacor-vendedor-pro-8ce28.firebaseapp.com",
+    projectId: "vidacor-vendedor-pro-8ce28",
+    storageBucket: "vidacor-vendedor-pro-8ce28.firebasestorage.app",
+    messagingSenderId: "634300515733",
+    appId: "1:634300515733:web:0a5c71d7349f065703629c",
+    measurementId: "G-1S26Z1MWQH"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ==================== ESTADO GLOBAL ====================
+let obras = [];
+let metaVisitas = parseInt(localStorage.getItem('vidacorMetaVisitas')) || 5;
+let chartStatusInstance, chartSemanalInstance, chartFunilInstance;
+let usuarioLogado = null; // { unidade, numero, nome }
+let unsubscribeObras = null;
+let compartilharLoc = false;
+let watchIdLoc = null;
+
+// ==================== UTILITÁRIOS ====================
+function playSound(t) {
+    try {
+        let c = new AudioContext(), o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination); g.gain.value = 0.1;
+        o.frequency.value = t === 'success' ? 800 : 1200;
+        o.start(); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.2);
+        o.stop(c.currentTime + 0.2);
+    } catch(e) {}
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg';
+    toast.textContent = msg;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark);
+    document.getElementById('darkSwitch').checked = isDark;
+    document.getElementById('darkLabel').textContent = isDark ? 'Escuro' : 'Claro';
+    if (document.getElementById('dashboardScreen').classList.contains('active')) carregarDashboard();
+}
+
+// ==================== LOGIN ====================
+function showLogin() {
+    const overlay = document.createElement('div');
+    overlay.className = 'login-overlay';
+    overlay.innerHTML = `
+        <div class="glass-card" style="width:90%;max-width:400px;padding:30px;color:var(--text-primary);">
+            <h4 class="text-center mb-4">🏗️ VIDACOR VENDEDOR PRO</h4>
+            <label>Unidade Vidacor</label>
+            <select id="loginUnidade" class="form-select rounded-pill mb-3">
+                <option value="">Selecione...</option>
+                <option value="Treze de Maio">Treze de Maio</option>
+                <option value="Centro">Centro</option>
+                <option value="Jardim Paulista">Jardim Paulista</option>
+            </select>
+            <label>Número do vendedor</label>
+            <select id="loginNumero" class="form-select rounded-pill mb-3">
+                <option value="">Escolha...</option>
+                <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+                <option value="04">04</option><option value="05">05</option>
+            </select>
+            <label>Seu nome</label>
+            <input type="text" id="loginNome" class="form-control rounded-pill mb-4" placeholder="Nome ou apelido">
+            <button class="btn btn-vidacor w-100 rounded-pill" onclick="efetuarLogin()">Entrar</button>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function efetuarLogin() {
+    const unidade = document.getElementById('loginUnidade').value;
+    const numero = document.getElementById('loginNumero').value;
+    const nome = document.getElementById('loginNome').value.trim();
+    if (!unidade || !numero || !nome) return showToast('Preencha todos os campos.');
+    usuarioLogado = { unidade, numero, nome };
+    localStorage.setItem('vidacorUser', JSON.stringify(usuarioLogado));
+    document.querySelector('.login-overlay').remove();
+    iniciarListenerObras();
+    iniciarCompartilhamentoLocalizacao();
+    navegarPara('dashboardScreen');
+    showToast(`Bem-vindo, ${nome}!`);
+}
+
+function trocarVendedor() {
+    if (confirm('Isso irá desconectar você. Continuar?')) {
+        if (unsubscribeObras) unsubscribeObras();
+        if (watchIdLoc) navigator.geolocation.clearWatch(watchIdLoc);
+        localStorage.removeItem('vidacorUser');
+        usuarioLogado = null;
+        obras = [];
+        showLogin();
+    }
+}
+
+function carregarUsuarioSalvo() {
+    const saved = localStorage.getItem('vidacorUser');
+    if (saved) {
+        usuarioLogado = JSON.parse(saved);
+        return true;
+    }
+    return false;
+}
+
+// ==================== FIRESTORE ====================
+const obrasRef = db.collection('obras');
+const locRef = db.collection('localizacoes');
+
+function iniciarListenerObras() {
+    if (!usuarioLogado || !usuarioLogado.unidade) return;
+    if (unsubscribeObras) unsubscribeObras();
+    unsubscribeObras = obrasRef.where('unidade', '==', usuarioLogado.unidade)
+        .onSnapshot(snapshot => {
+            obras = [];
+            snapshot.forEach(doc => {
+                obras.push({ ...doc.data(), firestoreId: doc.id });
+            });
+            atualizarTelaAtual();
+        });
+}
+
+function atualizarTelaAtual() {
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    if (active.id === 'dashboardScreen') carregarDashboard();
+    else if (active.id === 'listaScreen') listarObras();
+    else if (active.id === 'mapaScreen') adicionarMarcadores();
+}
+
+async function salvarObra(obraData) {
+    const obraParaSalvar = {
+        nome: obraData.nome,
+        endereco: obraData.endereco,
+        contato: obraData.contato,
+        telefone: obraData.telefone,
+        observacoes: obraData.observacoes,
+        estagio: obraData.estagio,
+        status: obraData.status,
+        clientePotencial: obraData.clientePotencial,
+        coords: obraData.coords,
+        dataProximaVisita: obraData.dataProximaVisita,
+        fotos: obraData.fotos || [],
+        unidade: usuarioLogado.unidade,
+        criadoPorNome: usuarioLogado.nome,
+        criadoPorNumero: usuarioLogado.numero,
+        criadoPor: `${usuarioLogado.numero} - ${usuarioLogado.nome}`,
+        ultimaVisitaPor: obraData.ultimaVisitaPor || '',
+        dataCriacao: obraData.dataCriacao || new Date().toISOString(),
+        dataAtualizacao: new Date().toISOString()
+    };
+    try {
+        if (obraData.firestoreId) {
+            await obrasRef.doc(obraData.firestoreId).update(obraParaSalvar);
+        } else {
+            await obrasRef.add(obraParaSalvar);
+        }
+        showToast('Obra salva com sucesso!');
+    } catch (e) {
+        showToast('Erro ao salvar: ' + e.message);
+    }
+}
+
+async function excluirObra(firestoreId) {
+    if (!confirm('Excluir esta obra?')) return;
+    try {
+        await obrasRef.doc(firestoreId).delete();
+        showToast('Obra excluída.');
+    } catch (e) {
+        showToast('Erro ao excluir: ' + e.message);
+    }
+}
+
+// ==================== COMPARTILHAR LOCALIZAÇÃO ====================
+function iniciarCompartilhamentoLocalizacao() {}
+
+function toggleCompartilharLoc() {
+    const check = document.getElementById('locSwitch');
+    compartilharLoc = check.checked;
+    if (compartilharLoc) {
+        if (navigator.geolocation) {
+            watchIdLoc = navigator.geolocation.watchPosition(pos => {
+                if (!usuarioLogado) return;
+                locRef.doc(`${usuarioLogado.unidade}_${usuarioLogado.numero}`).set({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    nome: usuarioLogado.nome,
+                    numero: usuarioLogado.numero,
+                    unidade: usuarioLogado.unidade,
+                    timestamp: Date.now()
+                });
+            }, err => showToast('Erro ao obter localização.'), { enableHighAccuracy: true });
+            showToast('Compartilhando localização com a equipe.');
+        }
+    } else {
+        if (watchIdLoc) {
+            navigator.geolocation.clearWatch(watchIdLoc);
+            locRef.doc(`${usuarioLogado.unidade}_${usuarioLogado.numero}`).delete();
+            showToast('Localização desativada.');
+        }
+    }
+}
+
+// ==================== MAPA ====================
+let mapa, userMarker, markerCluster, circleProximidade;
+let tileLayerPadrao, tileLayerSatelite;
+let currentLayer = 'padrao';
+let markersEquipe = [];
+
+function iniciarMapa() {
+    if (!mapa) {
+        mapa = L.map('map', { zoomControl: false }).setView([-21.178, -47.806], 13);
+        L.control.zoom({ position: 'bottomright' }).addTo(mapa);
+        tileLayerPadrao = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapa);
+        tileLayerSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
+        markerCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
+        mapa.addLayer(markerCluster);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                mapa.setView([latitude, longitude], 14);
+                userMarker = L.marker([latitude, longitude], {
+                    icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png', iconSize: [25,41] })
+                }).addTo(mapa).bindPopup('Você aqui');
+                circleProximidade = L.circle([latitude, longitude], { radius: 5000, color: '#3E3B9F', fillOpacity: 0.1 }).addTo(mapa);
+            });
+        }
+
+        mapa.on('contextmenu', async e => {
+            document.getElementById('coordsObra').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+            try {
+                let res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&addressdetails=1`);
+                let data = await res.json();
+                if (data?.address) {
+                    let logradouro = data.address.road || data.display_name.split(',')[0] || '';
+                    if (data.address.house_number && logradouro.includes(data.address.house_number)) {
+                        logradouro = logradouro.replace(data.address.house_number, '').trim();
+                    }
+                    document.getElementById('enderecoObra').value = logradouro;
+                    if (data.address.house_number) document.getElementById('numeroObra').value = data.address.house_number;
+                }
+            } catch(ex) {}
+            navegarPara('cadastroScreen');
+        });
+    } else {
+        mapa.invalidateSize();
+    }
+    adicionarMarcadores();
+    adicionarMarcadoresEquipe();
+}
+
+function adicionarMarcadores() {
+    if (!markerCluster) return;
+    markerCluster.clearLayers();
+    const filtroPendente = document.getElementById('mapFiltroPendente')?.checked ?? true;
+    const filtroVisitada = document.getElementById('mapFiltroVisitada')?.checked ?? true;
+    const filtroFechada = document.getElementById('mapFiltroFechada')?.checked ?? true;
+
+    obras.forEach(o => {
+        if (!o.coords) return;
+        if (!filtroPendente && o.status === 'pendente') return;
+        if (!filtroVisitada && o.status === 'visitada') return;
+        if (!filtroFechada && o.status === 'fechada') return;
+
+        const [lat, lng] = o.coords.split(',').map(Number);
+        if (isNaN(lat)) return;
+
+        let iconUrl = '';
+        switch (o.status) {
+            case 'pendente': iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png'; break;
+            case 'visitada': iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png'; break;
+            case 'fechada': iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'; break;
+            default: iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png';
+        }
+
+        const marker = L.marker([lat, lng], { icon: L.icon({ iconUrl, iconSize: [25,41] }) });
+        marker.bindPopup(`
+            <strong>${o.nome}</strong><br>
+            ${o.endereco}<br>
+            Status: ${o.status}<br>
+            <small>Criado por: ${o.criadoPor || '---'}</small><br>
+            <button class="btn btn-sm btn-outline-primary mt-1" onclick="verDetalhe('${o.firestoreId}')">Detalhes</button>
+            <button class="btn btn-sm btn-outline-success mt-1" onclick="abrirStreetViewCoords('${o.coords}')">Street View</button>
+        `);
+        markerCluster.addLayer(marker);
+    });
+}
+
+function adicionarMarcadoresEquipe() {
+    if (!mapa || !usuarioLogado) return;
+    markersEquipe.forEach(m => mapa.removeLayer(m));
+    markersEquipe = [];
+
+    if (!compartilharLoc) return;
+
+    locRef.where('unidade', '==', usuarioLogado.unidade)
+        .onSnapshot(snapshot => {
+            markersEquipe.forEach(m => mapa.removeLayer(m));
+            markersEquipe = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.numero === usuarioLogado.numero) return;
+                const marker = L.marker([data.lat, data.lng], {
+                    icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png', iconSize: [25,41] })
+                }).bindPopup(`${data.nome} (${data.numero})`).addTo(mapa);
+                markersEquipe.push(marker);
+            });
+        });
+}
+
+function filtrarMarcadores() { adicionarMarcadores(); }
+function centralizarUsuario() { navigator.geolocation.getCurrentPosition(p => mapa.setView([p.coords.latitude, p.coords.longitude], 16)); }
+function alternarCamada() {
+    if (currentLayer === 'padrao') {
+        mapa.removeLayer(tileLayerPadrao); tileLayerSatelite.addTo(mapa);
+        currentLayer = 'satelite'; document.getElementById('layerToggle').innerHTML = '<i class="bi bi-globe2"></i>';
+    } else {
+        mapa.removeLayer(tileLayerSatelite); tileLayerPadrao.addTo(mapa);
+        currentLayer = 'padrao'; document.getElementById('layerToggle').innerHTML = '<i class="bi bi-map"></i>';
+    }
+}
+function abrirStreetView() { const c = mapa.getCenter(); window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank'); }
+function abrirStreetViewCoords(coords) { window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${coords}`, '_blank'); }
+function roteirizarDoMapa() {
+    const pendentes = obras.filter(o => o.coords && o.status === 'pendente');
+    if (pendentes.length < 2) { showToast('Selecione ao menos 2 obras pendentes com coordenadas.'); return; }
+    const waypoints = pendentes.map(o => o.coords.replace(',', '%2C')).join('%7C');
+    window.open(`https://www.google.com/maps/dir/?api=1&travelmode=driving&waypoints=${waypoints}`, '_blank');
+}
+function roteirizarSelecionadas() {
+    const filtradas = getObrasFiltradas().filter(o => o.coords);
+    if (filtradas.length < 2) { showToast('Selecione ao menos 2 obras com coordenadas na lista.'); return; }
+    const waypoints = filtradas.map(o => o.coords.replace(',', '%2C')).join('%7C');
+    window.open(`https://www.google.com/maps/dir/?api=1&travelmode=driving&waypoints=${waypoints}`, '_blank');
+}
+async function buscarNoMapa() {
+    let q = document.getElementById('buscaMapa').value;
+    if (!q) return;
+    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`);
+    let data = await res.json();
+    if (data.length) mapa.setView([data[0].lat, data[0].lon], 16);
+    else showToast('Não encontrado');
+}
+
+// ==================== NAVEGAÇÃO ====================
+const telas = ['dashboardScreen','listaScreen','cadastroScreen','detalheScreen','mapaScreen','ferramentasScreen'];
+function mostrarTela(id) {
+    telas.forEach(t => document.getElementById(t).classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.toggle('active', b.dataset.screen === id));
+    if (id === 'dashboardScreen') { carregarDashboard(); obterClima(); }
+    if (id === 'listaScreen') listarObras();
+    if (id === 'mapaScreen') iniciarMapa();
+    if (id === 'cadastroScreen') resetForm();
+}
+function navegarPara(id) { mostrarTela(id); }
+document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.addEventListener('click', () => navegarPara(b.dataset.screen)));
+
+function cancelarCadastro() {
+    if (document.getElementById('nomeObra').value && !confirm('Cancelar? Dados serão perdidos.')) return;
+    navegarPara('listaScreen');
+}
+function resetForm() {
+    document.getElementById('formObra').reset();
+    document.getElementById('fotosPreview').innerHTML = '';
+    document.getElementById('fotosBase64').value = '';
+    document.getElementById('editId').value = '';
+    document.getElementById('numeroObra').value = '';
+    document.getElementById('dataVisitaObra').min = new Date().toISOString().split('T')[0];
+    document.getElementById('gpsBtn').innerHTML = '<i class="bi bi-geo-alt"></i>';
+}
+
+// ==================== FOTOS ====================
+let fotosTemp = [];
+function previewFotos(input) {
+    const container = document.getElementById('fotosPreview');
+    const files = Array.from(input.files).slice(0,3);
+    fotosTemp = []; container.innerHTML = '';
+    files.forEach(f => {
+        resizeImage(f, 800, b64 => {
+            fotosTemp.push(b64);
+            let img = document.createElement('img'); img.src = b64; img.className = 'img-thumb'; container.appendChild(img);
+            document.getElementById('fotosBase64').value = JSON.stringify(fotosTemp);
+        });
+    });
+}
+function resizeImage(file, maxW, cb) {
+    let r = new FileReader(); r.onload = e => {
+        let i = new Image(); i.onload = () => {
+            let c = document.createElement('canvas'), w = i.width, h = i.height;
+            if (w > maxW) { h = Math.round(h*maxW/w); w = maxW; }
+            c.width = w; c.height = h; c.getContext('2d').drawImage(i,0,0,w,h);
+            cb(c.toDataURL('image/jpeg',0.8));
+        }; i.src = e.target.result;
+    }; r.readAsDataURL(file);
+}
+
+// ==================== GPS ====================
+async function obterLocalizacao() {
+    let btn = document.getElementById('gpsBtn'); 
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; 
+    btn.disabled = true;
+    if (!navigator.geolocation) {
+        showToast('Geolocalização não suportada.');
+        btn.innerHTML = '<i class="bi bi-geo-alt"></i>'; btn.disabled = false;
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        document.getElementById('coordsObra').value = `${lat}, ${lng}`;
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+            const data = await res.json();
+            if (data && data.address) {
+                let logradouro = data.address.road || data.display_name.split(',')[0] || '';
+                if (data.address.house_number && logradouro.includes(data.address.house_number)) {
+                    logradouro = logradouro.replace(data.address.house_number, '').trim();
+                }
+                document.getElementById('enderecoObra').value = logradouro;
+                if (data.address.house_number) {
+                    document.getElementById('numeroObra').value = data.address.house_number;
+                    showToast('Endereço preenchido. Confirme o número.');
+                } else {
+                    showToast('Endereço preenchido. Informe o número manualmente.');
+                }
+            } else {
+                showToast('Coordenadas obtidas, mas endereço não encontrado.');
+            }
+        } catch (err) {
+            showToast('Coordenadas obtidas, mas não foi possível obter o endereço.');
+        }
+        btn.innerHTML = '<i class="bi bi-geo-alt"></i>'; btn.disabled = false;
+    }, err => {
+        showToast('Erro ao obter localização.');
+        btn.innerHTML = '<i class="bi bi-geo-alt"></i>'; btn.disabled = false;
+    }, { enableHighAccuracy: true });
+}
+
+// ==================== SALVAR / EDITAR ====================
+document.getElementById('formObra').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const obraData = {
+        firestoreId: id || null,
+        nome: document.getElementById('nomeObra').value,
+        endereco: document.getElementById('enderecoObra').value + (document.getElementById('numeroObra').value ? ', ' + document.getElementById('numeroObra').value : ''),
+        contato: document.getElementById('contatoObra').value,
+        telefone: document.getElementById('telefoneObra').value,
+        observacoes: document.getElementById('observacoesObra').value,
+        estagio: document.getElementById('estagioObra').value,
+        status: document.getElementById('statusObra').value,
+        clientePotencial: document.getElementById('clientePotencial').checked,
+        coords: document.getElementById('coordsObra').value,
+        dataProximaVisita: document.getElementById('dataVisitaObra').value,
+        fotos: JSON.parse(document.getElementById('fotosBase64').value || '[]'),
+        dataCriacao: id ? obras.find(o => o.firestoreId === id)?.dataCriacao || new Date().toISOString() : new Date().toISOString()
+    };
+    salvarObra(obraData);
+    navegarPara('listaScreen');
+});
+
+// ==================== LISTAGEM ====================
+function getObrasFiltradas() {
+    let txt = document.getElementById('buscaObra')?.value.toLowerCase() || '';
+    let st = document.getElementById('filtroStatus')?.value || '';
+    let est = document.getElementById('filtroEstagio')?.value || '';
+    let ord = document.getElementById('ordenacaoLista')?.value || 'recentes';
+    let verArq = document.getElementById('mostrarArquivadas')?.checked || false;
+    let agora = new Date();
+    let ativas = obras.filter(o => {
+        if (!verArq && o.status === 'fechada' && o.dataAtualizacao && (agora - new Date(o.dataAtualizacao)) > 30*24*3600*1000) return false;
+        return (txt === '' || o.nome.toLowerCase().includes(txt) || o.endereco.toLowerCase().includes(txt)) && (!st || o.status === st) && (!est || o.estagio === est);
+    });
+    switch(ord) {
+        case 'recentes': ativas.sort((a,b)=> new Date(b.dataCriacao)-new Date(a.dataCriacao)); break;
+        case 'antigas': ativas.sort((a,b)=> new Date(a.dataCriacao)-new Date(b.dataCriacao)); break;
+        case 'nomeAZ': ativas.sort((a,b)=> a.nome.localeCompare(b.nome)); break;
+        case 'nomeZA': ativas.sort((a,b)=> b.nome.localeCompare(a.nome)); break;
+        case 'proxVis': ativas.sort((a,b)=> (a.dataProximaVisita||'9999') > (b.dataProximaVisita||'9999') ? 1 : -1); break;
+        case 'proxVisDesc': ativas.sort((a,b)=> (b.dataProximaVisita||'0000') > (a.dataProximaVisita||'0000') ? 1 : -1); break;
+    }
+    return ativas;
+}
+function listarObras() {
+    const container = document.getElementById('listaObrasContainer');
+    const obrasF = getObrasFiltradas();
+    if (!obrasF.length) { container.innerHTML = '<p class="text-muted">Nenhuma obra.</p>'; return; }
+    container.innerHTML = obrasF.map(o => {
+        const badge = o.clientePotencial ? ' ⭐' : '';
+        const novidade = (new Date() - new Date(o.dataCriacao)) < 86400000 ? '<span class="badge-nova">NOVA</span>' : '';
+        const podeEditar = (o.criadoPorNumero === usuarioLogado.numero || usuarioLogado.numero === '01');
+        return `<div class="card-obra" onclick="verDetalhe('${o.firestoreId}')">
+            <div class="d-flex justify-content-between align-items-start">
+                <strong>${o.nome}${badge}${novidade}</strong>
+                <span class="status-badge bg-${o.status==='fechada'?'success':o.status==='visitada'?'warning text-dark':'secondary'}">${o.status.toUpperCase()}</span>
+            </div>
+            <small class="text-muted" onclick="event.stopPropagation(); copiarEndereco('${o.endereco.replace(/'/g, "\\'")}')">${o.endereco}</small>
+            <div class="expand-details">
+                <p><strong>Estágio:</strong> ${o.estagio} | <strong>Próx visita:</strong> ${o.dataProximaVisita?new Date(o.dataProximaVisita+'T00:00:00').toLocaleDateString():'não agendada'}</p>
+            </div>
+            ${podeEditar ? `<div class="d-flex justify-content-end gap-1 mt-2">
+                <button class="btn btn-sm btn-warning rounded-pill" onclick="event.stopPropagation(); visitaRapida('${o.firestoreId}')">Visitar</button>
+                <button class="btn btn-sm btn-success rounded-pill" onclick="event.stopPropagation(); fecharRapido('${o.firestoreId}')">Fechar</button>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+function copiarEndereco(endereco) {
+    navigator.clipboard.writeText(endereco).then(() => showToast('Endereço copiado!'));
+}
+function visitaRapida(firestoreId) {
+    const obra = obras.find(o => o.firestoreId === firestoreId);
+    if (obra) {
+        obra.status = 'visitada';
+        obra.dataAtualizacao = new Date().toISOString();
+        obra.ultimaVisitaPor = `${usuarioLogado.numero} - ${usuarioLogado.nome}`;
+        obrasRef.doc(firestoreId).update({ status: 'visitada', dataAtualizacao: obra.dataAtualizacao, ultimaVisitaPor: obra.ultimaVisitaPor });
+        showToast('Obra visitada!');
+        playSound('success');
+    }
+}
+function fecharRapido(firestoreId) {
+    const obra = obras.find(o => o.firestoreId === firestoreId);
+    if (obra) {
+        obra.status = 'fechada';
+        obra.dataAtualizacao = new Date().toISOString();
+        obra.ultimaVisitaPor = `${usuarioLogado.numero} - ${usuarioLogado.nome}`;
+        obrasRef.doc(firestoreId).update({ status: 'fechada', dataAtualizacao: obra.dataAtualizacao, ultimaVisitaPor: obra.ultimaVisitaPor });
+        showToast('Obra fechada!');
+        playSound('success');
+    }
+}
+document.getElementById('buscaObra').addEventListener('input', listarObras);
+document.getElementById('filtroStatus').addEventListener('change', listarObras);
+document.getElementById('filtroEstagio').addEventListener('change', listarObras);
+document.getElementById('ordenacaoLista').addEventListener('change', listarObras);
+document.getElementById('mostrarArquivadas').addEventListener('change', listarObras);
+
+// ==================== DETALHES ====================
+function verDetalhe(firestoreId) {
+    const obra = obras.find(o => o.firestoreId === firestoreId);
+    if (!obra) return;
+    const fotosHtml = obra.fotos?.map(f => `<img src="${f}" class="img-thumb">`).join('') || '';
+    const googleMaps = obra.coords ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${obra.coords}" target="_blank" class="btn btn-sm btn-outline-primary">🗺️ Google Maps</a>` : '';
+    const podeEditar = (obra.criadoPorNumero === usuarioLogado.numero || usuarioLogado.numero === '01');
+    document.getElementById('detalheConteudo').innerHTML = `
+        <h4>${obra.nome} ${obra.clientePotencial?'⭐':''}</h4>
+        <div>${fotosHtml}</div>
+        <p><strong>Endereço:</strong> <span onclick="copiarEndereco('${obra.endereco.replace(/'/g, "\\'")}')">${obra.endereco}</span></p>
+        <p><strong>Contato:</strong> ${obra.contato||'-'} ${obra.telefone?`<a href="tel:${obra.telefone}" class="btn btn-sm btn-outline-success"><i class="bi bi-telephone"></i></a>`:''}</p>
+        <p><strong>Obs:</strong> ${obra.observacoes||'-'}</p>
+        <p><strong>Estágio:</strong> ${obra.estagio} | <strong>Status:</strong> ${obra.status}</p>
+        <p><strong>Próx. visita:</strong> ${obra.dataProximaVisita?new Date(obra.dataProximaVisita+'T00:00:00').toLocaleDateString():'não definida'}</p>
+        <p><small>Criado por: ${obra.criadoPor} | Última visita: ${obra.ultimaVisitaPor||'---'}</small></p>
+        ${googleMaps}
+        ${podeEditar ? `<button class="btn btn-sm btn-outline-primary" onclick="editarObra('${obra.firestoreId}')">✏️ Editar</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="excluirObra('${obra.firestoreId}')">🗑️ Excluir</button>` : ''}
+        <hr><h6>Histórico</h6>${obra.historico?.map(h => `<div>${new Date(h.data).toLocaleString()}: ${h.descricao}</div>`).join('')||'Sem registro'}
+    `;
+    navegarPara('detalheScreen');
+}
+
+function editarObra(firestoreId) {
+    const obra = obras.find(o => o.firestoreId === firestoreId);
+    if (!obra) return;
+    document.getElementById('editId').value = obra.firestoreId;
+    document.getElementById('nomeObra').value = obra.nome;
+    const partes = obra.endereco.split(',');
+    document.getElementById('enderecoObra').value = partes[0]?.trim() || '';
+    document.getElementById('numeroObra').value = partes[1]?.trim() || '';
+    document.getElementById('contatoObra').value = obra.contato || '';
+    document.getElementById('telefoneObra').value = obra.telefone || '';
+    document.getElementById('observacoesObra').value = obra.observacoes || '';
+    document.getElementById('estagioObra').value = obra.estagio;
+    document.getElementById('statusObra').value = obra.status;
+    document.getElementById('clientePotencial').checked = obra.clientePotencial || false;
+    document.getElementById('coordsObra').value = obra.coords || '';
+    document.getElementById('dataVisitaObra').value = obra.dataProximaVisita || '';
+    const prev = document.getElementById('fotosPreview');
+    prev.innerHTML = (obra.fotos || []).map(f => `<img src="${f}" class="img-thumb">`).join('');
+    document.getElementById('fotosBase64').value = JSON.stringify(obra.fotos || []);
+    navegarPara('cadastroScreen');
+}
+
+// ==================== DASHBOARD ====================
+function carregarDashboard() {
+    const eixoColor = getComputedStyle(document.body).getPropertyValue('--chart-text').trim();
+    const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
+    let hoje = new Date(), semana = [];
+    for (let i=6; i>=0; i--) { let d = new Date(hoje); d.setDate(d.getDate()-i); semana.push(d.toLocaleDateString('pt-BR',{weekday:'short'})+' '+d.getDate()); }
+    let visitasPorDia = Array(7).fill(0);
+    obras.forEach(o => { if (o.status==='visitada' && o.dataAtualizacao) { let dia = new Date(o.dataAtualizacao).toDateString(); for (let i=0;i<7;i++) { let d = new Date(hoje); d.setDate(d.getDate()-i); if (d.toDateString()===dia) visitasPorDia[6-i]++; } } });
+    if (chartSemanalInstance) chartSemanalInstance.destroy();
+    chartSemanalInstance = new Chart(document.getElementById('chartSemanal').getContext('2d'), { type:'bar', data:{ labels:semana, datasets:[{ data:visitasPorDia, backgroundColor:'#3E3B9F', borderRadius:8 }] }, options:{ plugins:{legend:{display:false}}, scales:{ x:{ ticks:{ color:eixoColor } }, y:{ beginAtZero:true, ticks:{ stepSize:1, color:eixoColor }, grid:{ color:gridColor } } } } });
+
+    let estagios = ['prospecção','fundação','estrutura','acabamento','finalizada'];
+    let contagemEstagios = estagios.map(e => obras.filter(o => o.estagio === e && o.status !== 'fechada').length);
+    if (chartFunilInstance) chartFunilInstance.destroy();
+    chartFunilInstance = new Chart(document.getElementById('chartFunil').getContext('2d'), { type:'bar', data:{ labels:estagios, datasets:[{ data:contagemEstagios, backgroundColor:'#3E3B9F', borderRadius:8 }] }, options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true, ticks:{ stepSize:1, color:eixoColor }, grid:{ color:gridColor } }, y:{ ticks:{ color:eixoColor } } } } });
+
+    let ativas = obras.filter(o => !(o.status==='fechada' && o.dataAtualizacao && (hoje - new Date(o.dataAtualizacao)) > 30*24*3600*1000));
+    document.getElementById('countVisitas').textContent = ativas.filter(o => o.status==='visitada' && o.dataAtualizacao && new Date(o.dataAtualizacao).toDateString()===hoje.toDateString()).length;
+    document.getElementById('countPendentes').textContent = ativas.filter(o => o.status==='pendente').length;
+    document.getElementById('countProspeccao').textContent = ativas.filter(o => o.estagio==='prospecção').length;
+    document.getElementById('countFechadas').textContent = ativas.filter(o => o.status==='fechada').length;
+    let vHoje = ativas.filter(o => o.status==='visitada' && o.dataAtualizacao && new Date(o.dataAtualizacao).toDateString()===hoje.toDateString()).length;
+    let pct = Math.min((vHoje/metaVisitas)*100, 100);
+    document.querySelector('.progress-circle').style.strokeDashoffset = 251.2 - (251.2 * pct / 100);
+    document.getElementById('metaTextoCircular').textContent = `${vHoje}/${metaVisitas}`;
+    if (vHoje >= metaVisitas) playSound('meta');
+
+    let pend = ativas.filter(o=>o.status==='pendente').length, visit = ativas.filter(o=>o.status==='visitada').length, fech = ativas.filter(o=>o.status==='fechada').length;
+    if (chartStatusInstance) chartStatusInstance.destroy();
+    chartStatusInstance = new Chart(document.getElementById('chartStatus').getContext('2d'), { type:'doughnut', data:{labels:['Pendente','Visitada','Fechada'], datasets:[{data:[pend,visit,fech], backgroundColor:['#6c757d','#ffc107','#28a745']}]}, options:{plugins:{legend:{position:'bottom', labels:{ color:eixoColor }}}} });
+    let proximas = ativas.filter(o=>o.status==='pendente' && o.dataProximaVisita).sort((a,b)=>new Date(a.dataProximaVisita)-new Date(b.dataProximaVisita)).slice(0,5);
+    document.getElementById('proximasObrasList').innerHTML = proximas.length ? proximas.map(o => `<div class="card-obra" onclick="verDetalhe('${o.firestoreId}')"><strong>${o.nome}</strong><br><small>${o.endereco} · ${new Date(o.dataProximaVisita+'T00:00:00').toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">Nenhuma.</p>';
+
+    if (hoje.getDay() === 1 && !localStorage.getItem('resumoVisto_'+hoje.toDateString())) {
+        let inicioSemana = new Date(hoje); inicioSemana.setDate(hoje.getDate()-7);
+        let fechadasSemana = obras.filter(o => o.status==='fechada' && o.dataAtualizacao && new Date(o.dataAtualizacao) >= inicioSemana && new Date(o.dataAtualizacao) <= hoje);
+        if (fechadasSemana.length) {
+            showToast(`📊 Semana anterior: ${fechadasSemana.length} obra(s) fechada(s).`);
+            localStorage.setItem('resumoVisto_'+hoje.toDateString(), '1');
+        }
+    }
+}
+
+async function obterClima() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async pos => {
+        let { latitude, longitude } = pos.coords;
+        try {
+            let res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+            let data = await res.json();
+            document.getElementById('climaTemp').textContent = data.current_weather.temperature + '°C';
+            let code = data.current_weather.weathercode;
+            let icones = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌦️',82:'🌦️',95:'⛈️',96:'⛈️',97:'⛈️' };
+            document.getElementById('climaIcon').textContent = icones[code] || '🌡️';
+        } catch(e) {}
+    });
+}
+
+// ==================== CALCULADORA ====================
+document.getElementById('calcular-btn').addEventListener('click', () => {
+    let area = parseFloat(document.getElementById('area-wall').value);
+    let rend = parseFloat(document.getElementById('textura-tipo').value);
+    let nome = document.getElementById('textura-tipo').selectedOptions[0].text.split(' (')[0];
+    if (isNaN(area) || area<=0) return document.getElementById('resultado-wallcril').innerHTML = '<p style="color:#ffaa00">Área inválida.</p>';
+    let peso = area*rend, selador = peso*0.1;
+    document.getElementById('resultado-wallcril').innerHTML = `
+        <p>📐 Área: ${area.toFixed(2)} m²</p><p>🎨 Textura: ${nome}</p><p>⚖️ Peso textura: ${peso.toFixed(2)} kg</p>
+        <p>🧴 Selador: ${selador.toFixed(2)} kg</p><p>🛢️ Barricas textura (30kg): ${Math.ceil(peso/30)}</p>
+        <p>🛢️ Barricas selador (25kg): ${Math.ceil(selador/25)}</p>`;
+});
+
+// ==================== PWA ====================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([`self.addEventListener('fetch',e=>{})`])));
+}
+if (Notification.permission === 'default') setTimeout(() => Notification.requestPermission(), 2000);
+
+// ==================== INICIALIZAÇÃO (SEM ONBOARDING) ====================
+window.addEventListener('load', () => {
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) document.body.classList.add('dark');
+    document.getElementById('darkSwitch').checked = isDark;
+    document.getElementById('darkLabel').textContent = isDark ? 'Escuro' : 'Claro';
+    document.getElementById('dataVisitaObra').min = new Date().toISOString().split('T')[0];
+    setTimeout(() => {
+        document.getElementById('splashScreen').style.opacity = '0';
+        setTimeout(() => document.getElementById('splashScreen').remove(), 500);
+        if (carregarUsuarioSalvo()) {
+            iniciarListenerObras();
+            iniciarCompartilhamentoLocalizacao();
+            navegarPara('dashboardScreen');
+        } else {
+            showLogin();
+        }
+    }, 1500);
+});
+</script>
+</body>
+</html>
